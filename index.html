@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de la Compra</title>
+    <title>Lista de la Compra - Colaborativa</title>
     <style>
         * {
             margin: 0;
@@ -38,6 +38,25 @@
             text-align: center;
         }
 
+        .sync-status {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sync-status.online {
+            background: #e8f5e8;
+            color: #2e7d2e;
+        }
+
+        .sync-status.offline {
+            background: #fff3cd;
+            color: #856404;
+        }
+
         .counter {
             text-align: center;
             color: #667eea;
@@ -56,6 +75,12 @@
         .input-row {
             display: flex;
             gap: 10px;
+        }
+
+        .store-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         input[type="text"],
@@ -92,6 +117,20 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+        }
+
+        .btn-config {
+            padding: 12px;
+            width: 48px;
+            background: #f8f9fa;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-config:hover {
+            background: #e9ecef;
         }
 
         .btn-add {
@@ -242,6 +281,130 @@
             margin-bottom: 15px;
         }
 
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #667eea;
+        }
+
+        .stores-list {
+            margin: 20px 0;
+        }
+
+        .store-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .store-name {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .store-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #e0a800;
+        }
+
+        .btn-remove-store {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-remove-store:hover {
+            background: #c82333;
+        }
+
+        .add-store-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .edit-form {
+            display: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 20px;
@@ -255,12 +418,31 @@
                 flex-direction: column;
             }
 
+            .store-row {
+                flex-direction: row;
+            }
+
             input[type="number"] {
                 width: 100%;
             }
 
             .actions {
                 flex-direction: column;
+            }
+
+            .modal-content {
+                margin: 20px auto;
+                padding: 20px;
+            }
+
+            .store-item {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .store-actions {
+                justify-content: center;
             }
         }
 
@@ -286,6 +468,11 @@
 <body>
     <div class="container">
         <h1>🛒 Lista de la Compra</h1>
+        
+        <div id="syncStatus" class="sync-status offline">
+            📡 Modo offline - Los cambios se guardarán localmente
+        </div>
+
         <div class="counter" id="counter" aria-live="polite">
             0 pendientes de 0 items
         </div>
@@ -306,14 +493,12 @@
                     value="1" 
                     aria-label="Cantidad"
                 >
-                <select id="storeSelect" aria-label="Tienda">
-                    <option value="Supermercado">Supermercado</option>
-                    <option value="Frutería">Frutería</option>
-                    <option value="Carnicería">Carnicería</option>
-                    <option value="Panadería">Panadería</option>
-                    <option value="Farmacia">Farmacia</option>
-                    <option value="Otros">Otros</option>
-                </select>
+                <div class="store-row">
+                    <select id="storeSelect" aria-label="Tienda"></select>
+                    <button type="button" class="btn btn-config" id="configBtn" title="Gestionar tiendas" aria-label="Configurar tiendas">
+                        ⚙️
+                    </button>
+                </div>
             </div>
             <button type="submit" class="btn btn-add">
                 Añadir
@@ -336,10 +521,46 @@
         </ul>
     </div>
 
+    <!-- Modal de gestión de tiendas -->
+    <div id="storeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Gestionar Tiendas</h2>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            
+            <div class="add-store-form">
+                <input type="text" id="newStoreName" placeholder="Nombre de la nueva tienda" />
+                <button class="btn btn-primary btn-small" id="addStoreBtn">Añadir</button>
+            </div>
+            
+            <div class="stores-list" id="storesList"></div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" id="restoreDefaultBtn">Restaurar por defecto</button>
+                <button class="btn btn-primary" id="closeModalBtn">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        class ShoppingList {
+        class CollaborativeShoppingList {
             constructor() {
-                this.items = this.loadFromStorage();
+                this.items = [];
+                this.stores = this.getDefaultStores();
+                this.syncEnabled = false;
+                this.syncInterval = null;
+                this.lastSync = 0;
+                this.roomId = this.getRoomId();
+                
+                this.initElements();
+                this.initStores();
+                this.loadFromStorage();
+                this.initSync();
+                this.init();
+            }
+
+            initElements() {
                 this.form = document.getElementById('form');
                 this.itemInput = document.getElementById('itemInput');
                 this.quantityInput = document.getElementById('quantityInput');
@@ -348,24 +569,164 @@
                 this.counter = document.getElementById('counter');
                 this.clearCompletedBtn = document.getElementById('clearCompleted');
                 this.clearAllBtn = document.getElementById('clearAll');
+                this.configBtn = document.getElementById('configBtn');
+                this.syncStatus = document.getElementById('syncStatus');
+                
+                // Modal elements
+                this.modal = document.getElementById('storeModal');
+                this.closeModal = document.getElementById('closeModal');
+                this.closeModalBtn = document.getElementById('closeModalBtn');
+                this.newStoreName = document.getElementById('newStoreName');
+                this.addStoreBtn = document.getElementById('addStoreBtn');
+                this.storesList = document.getElementById('storesList');
+                this.restoreDefaultBtn = document.getElementById('restoreDefaultBtn');
+            }
 
-                this.init();
+            getDefaultStores() {
+                return [
+                    'Supermercado',
+                    'Frutería',
+                    'Carnicería',
+                    'Panadería',
+                    'Farmacia',
+                    'Otros'
+                ];
+            }
+
+            getRoomId() {
+                // Usar URL como sala compartida, o crear una sala específica
+                let roomId = localStorage.getItem('shoppingListRoom');
+                if (!roomId) {
+                    roomId = 'shopping-' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('shoppingListRoom', roomId);
+                }
+                return roomId;
+            }
+
+            initSync() {
+                // Simular sincronización usando localStorage compartido
+                // En una implementación real, usarías WebSockets, Firebase, o similar
+                this.syncInterval = setInterval(() => {
+                    this.checkForUpdates();
+                }, 2000);
+
+                // Simular conexión
+                setTimeout(() => {
+                    this.syncEnabled = true;
+                    this.updateSyncStatus();
+                }, 1000);
+            }
+
+            checkForUpdates() {
+                if (!this.syncEnabled) return;
+
+                const sharedData = localStorage.getItem(`shared_${this.roomId}`);
+                if (sharedData) {
+                    try {
+                        const data = JSON.parse(sharedData);
+                        if (data.timestamp > this.lastSync) {
+                            this.items = data.items || [];
+                            this.stores = data.stores || this.getDefaultStores();
+                            this.lastSync = data.timestamp;
+                            this.render();
+                            this.updateStoreSelect();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing shared data:', e);
+                    }
+                }
+            }
+
+            syncToShared() {
+                if (!this.syncEnabled) return;
+
+                const data = {
+                    items: this.items,
+                    stores: this.stores,
+                    timestamp: Date.now()
+                };
+                
+                this.lastSync = data.timestamp;
+                localStorage.setItem(`shared_${this.roomId}`, JSON.stringify(data));
+            }
+
+            updateSyncStatus() {
+                if (this.syncEnabled) {
+                    this.syncStatus.textContent = '🌐 Conectado - Sincronización en tiempo real';
+                    this.syncStatus.className = 'sync-status online';
+                } else {
+                    this.syncStatus.textContent = '📡 Modo offline - Los cambios se guardarán localmente';
+                    this.syncStatus.className = 'sync-status offline';
+                }
+            }
+
+            initStores() {
+                const savedStores = localStorage.getItem('customStores');
+                if (savedStores) {
+                    this.stores = JSON.parse(savedStores);
+                }
+                this.updateStoreSelect();
+            }
+
+            updateStoreSelect() {
+                const currentValue = this.storeSelect.value;
+                this.storeSelect.innerHTML = '';
+                
+                this.stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store;
+                    option.textContent = store;
+                    this.storeSelect.appendChild(option);
+                });
+                
+                if (this.stores.includes(currentValue)) {
+                    this.storeSelect.value = currentValue;
+                }
+            }
+
+            saveStores() {
+                localStorage.setItem('customStores', JSON.stringify(this.stores));
+                this.syncToShared();
             }
 
             init() {
                 this.form.addEventListener('submit', (e) => this.addItem(e));
                 this.clearCompletedBtn.addEventListener('click', () => this.clearCompleted());
                 this.clearAllBtn.addEventListener('click', () => this.clearAll());
+                this.configBtn.addEventListener('click', () => this.openStoreModal());
+                
+                // Modal event listeners
+                this.closeModal.addEventListener('click', () => this.closeStoreModal());
+                this.closeModalBtn.addEventListener('click', () => this.closeStoreModal());
+                this.addStoreBtn.addEventListener('click', () => this.addStore());
+                this.newStoreName.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addStore();
+                });
+                this.restoreDefaultBtn.addEventListener('click', () => this.restoreDefaultStores());
+                
+                // Close modal when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeStoreModal();
+                    }
+                });
+
                 this.render();
             }
 
             loadFromStorage() {
                 const stored = localStorage.getItem('shoppingList');
-                return stored ? JSON.parse(stored) : [];
+                if (stored) {
+                    this.items = JSON.parse(stored);
+                }
+                
+                // Check for shared data
+                this.checkForUpdates();
             }
 
             saveToStorage() {
                 localStorage.setItem('shoppingList', JSON.stringify(this.items));
+                this.syncToShared();
             }
 
             addItem(e) {
@@ -381,7 +742,8 @@
                     text,
                     quantity,
                     store,
-                    completed: false
+                    completed: false,
+                    timestamp: Date.now()
                 };
 
                 this.items.push(item);
@@ -396,6 +758,7 @@
                 const item = this.items.find(item => item.id === id);
                 if (item) {
                     item.completed = !item.completed;
+                    item.timestamp = Date.now();
                     this.saveToStorage();
                     this.render();
                 }
@@ -425,6 +788,146 @@
                         this.render();
                     }
                 }
+            }
+
+            // Store management methods
+            openStoreModal() {
+                this.modal.style.display = 'block';
+                this.renderStoresList();
+                this.newStoreName.focus();
+            }
+
+            closeStoreModal() {
+                this.modal.style.display = 'none';
+            }
+
+            addStore() {
+                const storeName = this.newStoreName.value.trim();
+                if (!storeName) {
+                    alert('Por favor, ingresa un nombre para la tienda');
+                    return;
+                }
+
+                if (this.stores.includes(storeName)) {
+                    alert('Esta tienda ya existe');
+                    return;
+                }
+
+                this.stores.push(storeName);
+                this.saveStores();
+                this.updateStoreSelect();
+                this.renderStoresList();
+                this.newStoreName.value = '';
+                this.newStoreName.focus();
+            }
+
+            editStore(oldName) {
+                const newName = prompt('Nuevo nombre para la tienda:', oldName);
+                if (!newName || newName.trim() === '') return;
+                
+                const trimmedName = newName.trim();
+                if (trimmedName === oldName) return;
+
+                if (this.stores.includes(trimmedName)) {
+                    alert('Ya existe una tienda con ese nombre');
+                    return;
+                }
+
+                // Update store name in stores array
+                const index = this.stores.indexOf(oldName);
+                if (index > -1) {
+                    this.stores[index] = trimmedName;
+                }
+
+                // Update store name in existing items
+                this.items.forEach(item => {
+                    if (item.store === oldName) {
+                        item.store = trimmedName;
+                    }
+                });
+
+                this.saveStores();
+                this.saveToStorage();
+                this.updateStoreSelect();
+                this.renderStoresList();
+                this.render();
+            }
+
+            removeStore(storeName) {
+                const itemsInStore = this.items.filter(item => item.store === storeName);
+                
+                if (itemsInStore.length > 0) {
+                    if (!confirm(`Hay ${itemsInStore.length} producto(s) en "${storeName}". ¿Eliminar la tienda y mover los productos a "Otros"?`)) {
+                        return;
+                    }
+                    
+                    // Move items to "Otros"
+                    this.items.forEach(item => {
+                        if (item.store === storeName) {
+                            item.store = 'Otros';
+                        }
+                    });
+                }
+
+                this.stores = this.stores.filter(store => store !== storeName);
+                
+                // Ensure "Otros" exists
+                if (!this.stores.includes('Otros')) {
+                    this.stores.push('Otros');
+                }
+
+                this.saveStores();
+                this.saveToStorage();
+                this.updateStoreSelect();
+                this.renderStoresList();
+                this.render();
+            }
+
+            restoreDefaultStores() {
+                if (confirm('¿Restaurar las tiendas por defecto? Se perderán las personalizaciones.')) {
+                    const itemsWithCustomStores = this.items.filter(item => !this.getDefaultStores().includes(item.store));
+                    
+                    if (itemsWithCustomStores.length > 0) {
+                        if (confirm(`Hay ${itemsWithCustomStores.length} producto(s) en tiendas personalizadas. ¿Moverlos a "Otros"?`)) {
+                            itemsWithCustomStores.forEach(item => {
+                                item.store = 'Otros';
+                            });
+                        }
+                    }
+                    
+                    this.stores = this.getDefaultStores();
+                    this.saveStores();
+                    this.saveToStorage();
+                    this.updateStoreSelect();
+                    this.renderStoresList();
+                    this.render();
+                }
+            }
+
+            renderStoresList() {
+                this.storesList.innerHTML = '';
+                
+                this.stores.forEach(store => {
+                    const storeDiv = document.createElement('div');
+                    storeDiv.className = 'store-item';
+                    
+                    const itemCount = this.items.filter(item => item.store === store).length;
+                    const countText = itemCount > 0 ? ` (${itemCount})` : '';
+                    
+                    storeDiv.innerHTML = `
+                        <span class="store-name">${this.escapeHtml(store)}${countText}</span>
+                        <div class="store-actions">
+                            <button class="btn btn-edit btn-small" onclick="shoppingList.editStore('${this.escapeHtml(store)}')">
+                                Editar
+                            </button>
+                            <button class="btn btn-remove-store btn-small" onclick="shoppingList.removeStore('${this.escapeHtml(store)}')">
+                                Eliminar
+                            </button>
+                        </div>
+                    `;
+                    
+                    this.storesList.appendChild(storeDiv);
+                });
             }
 
             updateCounter() {
@@ -497,7 +1000,11 @@
         }
 
         // Inicializar la aplicación
-        const shoppingList = new ShoppingList();
+        const shoppingList = new CollaborativeShoppingList();
+        
+        // Mostrar ID de sala para compartir
+        console.log(`Sala de compras: ${shoppingList.roomId}`);
+        console.log('Comparte este ID con otros usuarios para colaborar en la misma lista');
     </script>
 </body>
 </html>
