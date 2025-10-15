@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de la Compra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .counter {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-clear,
+        .btn-delete {
+            flex: 1;
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-clear:hover,
+        .btn-delete:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+
+        .list {
+            list-style: none;
+        }
+
+        .store-group {
+            margin-bottom: 25px;
+        }
+
+        .store-title {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item.completed {
+            background: #e8f5e9;
+        }
+
+        .item.completed .item-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .item-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-text {
+            font-size: 16px;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .item-quantity {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .btn-remove {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+
+        .btn-remove:hover {
+            transform: scale(1.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state::before {
+            content: "🛒";
+            display: block;
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Accesibilidad */
+        *:focus-visible {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Lista de la Compra</h1>
+        <div class="counter" id="counter" aria-live="polite">
+            0 pendientes de 0 items
+        </div>
+
+        <form id="form" class="input-group">
+            <input 
+                type="text" 
+                id="itemInput" 
+                placeholder="Añadir producto..." 
+                aria-label="Nombre del producto"
+                required
+            >
+            <div class="input-row">
+                <input 
+                    type="number" 
+                    id="quantityInput" 
+                    min="1" 
+                    value="1" 
+                    aria-label="Cantidad"
+                >
+                <select id="storeSelect" aria-label="Tienda">
+                    <option value="Supermercado">Supermercado</option>
+                    <option value="Frutería">Frutería</option>
+                    <option value="Carnicería">Carnicería</option>
+                    <option value="Panadería">Panadería</option>
+                    <option value="Farmacia">Farmacia</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-add">
+                Añadir
+            </button>
+        </form>
+
+        <div class="actions">
+            <button class="btn btn-clear" id="clearCompleted">
+                Borrar comprados
+            </button>
+            <button class="btn btn-delete" id="clearAll">
+                Vaciar lista
+            </button>
+        </div>
+
+        <ul class="list" id="list" aria-label="Lista de la compra">
+            <li class="empty-state">
+                <p>Tu lista está vacía</p>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        class ShoppingList {
+            constructor() {
+                this.items = this.loadFromStorage();
+                this.form = document.getElementById('form');
+                this.itemInput = document.getElementById('itemInput');
+                this.quantityInput = document.getElementById('quantityInput');
+                this.storeSelect = document.getElementById('storeSelect');
+                this.list = document.getElementById('list');
+                this.counter = document.getElementById('counter');
+                this.clearCompletedBtn = document.getElementById('clearCompleted');
+                this.clearAllBtn = document.getElementById('clearAll');
+
+                this.init();
+            }
+
+            init() {
+                this.form.addEventListener('submit', (e) => this.addItem(e));
+                this.clearCompletedBtn.addEventListener('click', () => this.clearCompleted());
+                this.clearAllBtn.addEventListener('click', () => this.clearAll());
+                this.render();
+            }
+
+            loadFromStorage() {
+                const stored = localStorage.getItem('shoppingList');
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            saveToStorage() {
+                localStorage.setItem('shoppingList', JSON.stringify(this.items));
+            }
+
+            addItem(e) {
+                e.preventDefault();
+                const text = this.itemInput.value.trim();
+                const quantity = parseInt(this.quantityInput.value) || 1;
+                const store = this.storeSelect.value;
+
+                if (!text) return;
+
+                const item = {
+                    id: Date.now(),
+                    text,
+                    quantity,
+                    store,
+                    completed: false
+                };
+
+                this.items.push(item);
+                this.saveToStorage();
+                this.render();
+                this.form.reset();
+                this.quantityInput.value = 1;
+                this.itemInput.focus();
+            }
+
+            toggleItem(id) {
+                const item = this.items.find(item => item.id === id);
+                if (item) {
+                    item.completed = !item.completed;
+                    this.saveToStorage();
+                    this.render();
+                }
+            }
+
+            removeItem(id) {
+                this.items = this.items.filter(item => item.id !== id);
+                this.saveToStorage();
+                this.render();
+            }
+
+            clearCompleted() {
+                if (this.items.some(item => item.completed)) {
+                    if (confirm('¿Borrar todos los productos comprados?')) {
+                        this.items = this.items.filter(item => !item.completed);
+                        this.saveToStorage();
+                        this.render();
+                    }
+                }
+            }
+
+            clearAll() {
+                if (this.items.length > 0) {
+                    if (confirm('¿Vaciar toda la lista?')) {
+                        this.items = [];
+                        this.saveToStorage();
+                        this.render();
+                    }
+                }
+            }
+
+            updateCounter() {
+                const total = this.items.length;
+                const pending = this.items.filter(item => !item.completed).length;
+                this.counter.textContent = `${pending} pendiente${pending !== 1 ? 's' : ''} de ${total} item${total !== 1 ? 's' : ''}`;
+            }
+
+            groupByStore() {
+                const grouped = {};
+                this.items.forEach(item => {
+                    if (!grouped[item.store]) {
+                        grouped[item.store] = [];
+                    }
+                    grouped[item.store].push(item);
+                });
+                return grouped;
+            }
+
+            render() {
+                this.updateCounter();
+
+                if (this.items.length === 0) {
+                    this.list.innerHTML = `
+                        <li class="empty-state">
+                            <p>Tu lista está vacía</p>
+                        </li>
+                    `;
+                    return;
+                }
+
+                const groupedItems = this.groupByStore();
+                const stores = Object.keys(groupedItems).sort();
+
+                this.list.innerHTML = stores.map(store => `
+                    <li class="store-group">
+                        <div class="store-title">${store}</div>
+                        <ul>
+                            ${groupedItems[store].map(item => `
+                                <li class="item ${item.completed ? 'completed' : ''}" data-id="${item.id}">
+                                    <input 
+                                        type="checkbox" 
+                                        ${item.completed ? 'checked' : ''}
+                                        onchange="shoppingList.toggleItem(${item.id})"
+                                        aria-label="Marcar ${item.text} como comprado"
+                                    >
+                                    <div class="item-content">
+                                        <span class="item-text">${this.escapeHtml(item.text)}</span>
+                                        <span class="item-quantity">Cantidad: ${item.quantity}</span>
+                                    </div>
+                                    <button 
+                                        class="btn-remove" 
+                                        onclick="shoppingList.removeItem(${item.id})"
+                                        aria-label="Eliminar ${item.text}"
+                                    >
+                                        🗑
+                                    </button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </li>
+                `).join('');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Inicializar la aplicación
+        const shoppingList = new ShoppingList();
+    </script>
+</body>
+</html>
